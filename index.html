@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Clicker - Space Adventure Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a2e, #16213e, #000);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Title Screen */
+        .title-content {
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        .game-title {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .cosmic-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid #00ffff;
+            margin: 20px auto;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #00ffff;
+            text-align: left;
+        }
+
+        .instructions h2 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff4040, #ff8040);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 64, 64, 0.5);
+        }
+
+        /* Game Screen */
+        .game-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ffff;
+            z-index: 100;
+        }
+
+        .hud-item {
+            background: rgba(0, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .lives-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .life-heart {
+            width: 25px;
+            height: 25px;
+            background: #ff4040;
+            border-radius: 50%;
+        }
+
+        .life-heart.lost {
+            background: #666;
+        }
+
+        .game-area {
+            padding: 120px 20px 20px;
+            min-height: 100vh;
+            cursor: crosshair;
+            position: relative;
+        }
+
+        .mission-panels {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(0, 100, 200, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .explorer-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #00ffff;
+            margin: 0 auto 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .planet-container {
+            position: relative;
+            height: 400px;
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #0080ff, #00ff80);
+            border: 3px solid #00ff80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .planet:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 128, 0.7);
+        }
+
+        .planet-image {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Result Screens */
+        .victory-screen {
+            background: linear-gradient(135deg, #ffff00, #ff8000);
+        }
+
+        .defeat-screen {
+            background: linear-gradient(135deg, #800000, #000000);
+        }
+
+        .result-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .result-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 20px auto;
+            border: 5px solid;
+        }
+
+        .victory-image {
+            border-color: #ffff00;
+        }
+
+        .defeat-image {
+            border-color: #ff4040;
+            filter: grayscale(50%);
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .mission-panels {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .panel {
+                min-width: auto;
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+        <div class="title-content">
+            <img src="https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=200&h=200&fit=crop&crop=center" 
+                 alt="cosmic space background" class="cosmic-image">
+            
+            <h1 class="game-title">COSMIC CLICKER</h1>
+            
+            <div class="instructions">
+                <h2>🎯 MISSION GOAL</h2>
+                <p>Explore the cosmos and make 5 planet discoveries to win!</p>
+                
+                <h2>📋 HOW TO PLAY</h2>
+                <p>🪐 <strong>Click the planet</strong> to explore it (+1 discovery)</p>
+                <p>📉 Each click <strong>shrinks the planet</strong> by 20-50%</p>
+                <p>🌌 <strong>Miss the planet</strong> = lose a life and score resets to 0</p>
+                <p>❤️ You have <strong>3 lives</strong> total</p>
+                <p>🏆 Get <strong>5 discoveries</strong> to win</p>
+                <p>💀 Lose all lives = game over</p>
+            </div>
+            
+            <button id="start-btn" class="btn btn-primary">🚀 START MISSION</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="game-hud">
+            <div class="hud-item">
+                ⭐ Discoveries: <span id="score">0</span>
+            </div>
+            <div class="hud-item lives-display">
+                Lives: <div id="lives-container"></div>
+            </div>
+            <button id="quit-btn" class="btn btn-secondary">Return to Base</button>
+        </div>
+
+        <div class="game-area" id="game-area">
+            <div class="mission-panels">
+                <div class="panel">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🎯</div>
+                    <h3 class="panel-title">MISSION OBJECTIVE</h3>
+                    <p>🪐 Click the planet to explore</p>
+                    <p style="color: #ffaa00; margin-top: 10px;">⚠️ Miss = lose a life!</p>
+                </div>
+
+                <div class="panel">
+                    <img src="https://images.unsplash.com/photo-1608178398319-48f814d0750c?w=150&h=150&fit=crop&crop=center" 
+                         alt="space explorer" class="explorer-image">
+                    <h3 class="panel-title">SPACE EXPLORER</h3>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">PROGRESS</div>
+                            <div class="stat-value" style="color: #00ff00;"><span id="progress">0</span>/5</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">PLANET SIZE</div>
+                            <div class="stat-value" style="color: #ffaa00;"><span id="size">150</span>px</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="planet-container" id="planet-container">
+                <div class="planet" id="planet">
+                    <img src="https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=120&h=120&fit=crop&crop=center" 
+                         alt="explorable planet" class="planet-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="screen victory-screen">
+        <div class="result-content">
+            <img src="https://images.unsplash.com/photo-1563705980-5e3ed7b6e147?w=200&h=200&fit=crop&crop=center" 
+                 alt="victory celebration" class="result-image victory-image">
+            
+            <h1 class="result-title">🏆 MISSION SUCCESS! 🏆</h1>
+            <p style="font-size: 1.5rem; margin: 20px 0;">You discovered <span id="final-score-win">5</span> planets!</p>
+            <p style="font-size: 1.2rem;">Amazing space exploration skills!</p>
+            
+            <div style="margin-top: 30px;">

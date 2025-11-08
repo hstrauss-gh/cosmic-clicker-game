@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Clicker - Space Exploration Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0c0c2e, #1a1a4a, #000);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .title-content {
+            text-align: center;
+            z-index: 10;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .game-title {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .cosmic-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid #00ffff;
+            margin: 20px auto;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #00ffff;
+        }
+
+        .instructions h2 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .instructions p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff4040, #ff8040);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 64, 64, 0.5);
+        }
+
+        .game-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ffff;
+            z-index: 100;
+        }
+
+        .hud-item {
+            background: rgba(0, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .lives-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .life-heart {
+            width: 25px;
+            height: 25px;
+            background: #ff4040;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .life-heart.lost {
+            background: #666;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 50px 50px;
+            min-height: 100vh;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .top-section {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 24px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            padding: 0 24px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .mission-panel, .explorer-panel {
+            flex: 1;
+            min-width: 280px;
+            background: linear-gradient(135deg, 
+                rgba(6, 182, 212, 0.15) 0%, 
+                rgba(59, 130, 246, 0.1) 50%, 
+                rgba(99, 102, 241, 0.15) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                        0 0 30px rgba(6, 182, 212, 0.1);
+        }
+
+        .explorer-panel {
+            background: linear-gradient(135deg, 
+                rgba(147, 51, 234, 0.15) 0%, 
+                rgba(99, 102, 241, 0.1) 50%, 
+                rgba(6, 182, 212, 0.15) 100%);
+            border-color: rgba(147, 51, 234, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                        0 0 30px rgba(147, 51, 234, 0.1);
+        }
+
+        .panel-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(45deg, #06b6d4, #3b82f6);
+            border-radius: 12px;
+            font-size: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #67e8f9;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+        }
+
+        .explorer-panel .panel-title {
+            color: #c4b5fd;
+        }
+
+        .panel-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.5), transparent);
+            margin: 16px 0;
+        }
+
+        .explorer-panel .panel-divider {
+            background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.5), transparent);
+        }
+
+        .mission-objectives {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .mission-objective {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #a5f3fc;
+        }
+
+        .mission-warning {
+            color: #fde047;
+            font-weight: 600;
+        }
+
+        .explorer-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .explorer-avatar {
+            position: relative;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            border: 2px solid white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .progress-value {
+            color: #10b981;
+        }
+
+        .size-value {
+            color: #fbbf24;
+        }
+
+        .single-planet-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clickable-item {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            overflow: hidden;
+        }
+
+        .planet-target {
+            background: linear-gradient(45deg, #0080ff, #00ff80);
+            border-color: #00ff80;
+        }
+
+        .planet-target:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 30px rgba(0, 255, 128, 0.7);
+        }
+
+        .instruction-text {
+            color: #ffaa00;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .item-image {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .center-ship {
+            text-align: center;
+        }
+
+        .ship-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #00ffff;
+            margin-bottom: 15px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+        }
+
+        .progress-text {
+            font-size: 1rem;
+            color: #00ffff;
+            margin: 5px 0;
+        }
+
+        .status-title {
+            font-size: 1.2rem;
+            color: #00ffff;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .size-text {
+            font-size: 0.9rem;
+            color: #ffff00;
+            margin: 5px 0;
+        }
+
+        .victory-screen {
+            background: linear-gradient(135deg, #ffff00, #ff8000, #ff0080);
+        }
+
+        .defeat-screen {
+            background: linear-gradient(135deg, #800000, #000000, #400040);
+        }
+
+        .result-content {
+            text-align: center;
+            z-index: 10;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .result-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .result-image {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            margin: 20px auto;
+            border: 5px solid;
+        }
+
+        .victory-image {
+            border-color: #ffff00;
+            box-shadow: 0 0 50px rgba(255, 255, 0, 0.8);
+        }
+
+        .defeat-image {
+            border-color: #ff4040;
+            box-shadow: 0 0 50px rgba(255, 64, 64, 0.8);
+            filter: grayscale(50%);
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                padding: 120px 20px 50px;
+            }
+            
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .cosmic-image, .result-image {
+                width: 150px;
+                height: 150px;
+            }
+
+            .ship-image {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .top-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+        <div class="stars" id="title-stars"></div>
+        <div class="title-content">
+            <img src="https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=200&h=200&fit=crop&crop=center" 
+                 alt="cosmic-nebula-background" class="cosmic-image">
+            
+            <h1 class="game-title">COSMIC CLICKER</h1>
+            
+            <div class="instructions">
+                <h2>🎯 MISSION OBJECTIVE</h2>
+                <p>Explore the cosmos and discover 5 planets to complete your mission!</p>
+                
+                <h2>📋 INSTRUCTIONS</h2>
+                <p>🪐 <strong>Click the planet</strong> to make discoveries (+1 point each)</p>
+                <p>📉 Each successful click <strong>shrinks the planet</strong> by 20-50%</p>
+                <p>🌌 <strong>Miss the planet</strong> and click outer space - lose a life and reset score</p>
+                <p>❤️ You have <strong>3 lives</strong> to complete your mission</p>
+                <p>🏆 Reach <strong>5 discoveries</strong> to achieve victory</p>
+                <p>💀 Lose all lives and face mission failure</p>
+            </div>
+            
+            <button id="start-mission-btn" class="btn btn-primary">🚀 START MISSION</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="game-hud">
+            <div class="hud-item">
+                <span>⭐ Discoveries: <span id="score-counter">0</span></span>
+            </div>
+            <div class="hud-item lives-display">
+                <span>Lives:</span>
+                <div id="lives-hearts">
+                    <span class="life-heart"></span>
+                    <span class="life-heart"></span>
+                    <span class="life-heart"></span>
+                </div>
+            </div>
+            <button id="return-to-base-btn" class="btn btn-secondary">Return to Base</button>
+        </div>
+
+        <div class="game-area" id="outer-space-area">
+            <div class="top-section">
+                <!-- Mission Instructions Panel -->
+                <div class="mission-panel">
+                    <div class="explorer-status">
+                        <div class="panel-icon">🎯</div>
+                        <h3 class="panel-title">MISSION OBJECTIVE</h3>
+                        <div class="panel-divider"></div>
+                        <div class="mission-objectives">
+                            <div class="mission-objective">
+                                <span>🪐</span>
+                                <span>Click the planet to explore</span>
+                            </div>
+                            <div class="mission-objective mission-warning">
+                                <span>⚠️</span>
+                                <span>Miss the planet = lose a life!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explorer Status Panel -->
+                <div class="explorer-panel">
+                    <div class="explorer-status">
+                        <div class="explorer-avatar">
+                            <img src="https://images.unsplash.com/photo-1608178398319-48f814d0750c?w=200&h=200&fit=crop&crop=center" 
+                                 alt="explorer-spacecraft" class="ship-image">
+                            <div class="status-indicator"></div>
+                        </div>
+                        
+                        <h2 class="panel-title">SPACE EXPLORER</h2>
+                        <div class="panel-divider"></div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Progress</div>
+                                <div class="stat-value progress-value"><span id="mission-progress">0</span>/5</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Planet Size</div>
+                                <div class="stat-value size-value"><span id="planet-size">150</span>px</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="single-planet-container">
+                <div class="clickable-item planet-target" id="single-planet">
+                    <img src="https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=120&h=120&fit=crop&crop=center" 
+                         alt="explorable-planet" class="item-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="screen victory-screen">
+        <div class="floating-elements" id="victory-particles"></div>
+        <div class="result-content">
+            <img src="https://images.unsplash.com/photo-1563705980-5e3ed7b6e147?w=250&h=250&fit=crop&crop=center" 
+                 alt="mission-success-celebration" class="result-image victory-image">
+            
+            <h1 class="result-title">🏆 MISSION ACCOMPLISHED! 🏆</h1>
+            <p style="font-size: 1.5rem; margin: 20px 0;">You've successfully discovered <span id="final-score-victory">5</span> planets!</p>
+            <p style="font-size: 1.2rem; color: #ffff80;">You mastered the shrinking planet challenge!</p>
+            
+            <div style="margin-top: 40px;">
+                <button id="new-mission-btn" class="btn btn-primary">🚀 NEW MISSION</button>
+                <button id="return-to-command-btn" class="btn btn-secondary">Return to Command</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defeat Screen -->
+    <div id="defeat-screen" class="screen defeat-screen">
+        <div class="floating-elements" id="defeat-particles"></div>
+        <div class="result-content">
+            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=250&h=250&fit=crop&crop=center" 
+                 alt="mission-failure-wreckage" class="result-image defeat-image">
+            
+            <h1 class="result-title" style="color: #ff4040;">💥 MISSION FAILED 💥</h1>
+            <p style="font-size: 1.5rem; margin: 20px 0; color: #ff8080;">You missed the planet too many times!</p>
+            <p style="font-size: 1.2rem;">Final discoveries: <span id="final-score-defeat">0</span></p>
+            <p style="color: #888;">Precision is key in space exploration...</p>
+            
+            <div style="margin-top: 40px;">
+                <button id="retry-mission-btn" class="btn btn-primary">🔄 RETRY MISSION</button>
+                <button id="abandon-mission-btn" class="btn btn-secondary">Abandon Mission</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let currentScore = 0;
+        let currentLives = 3;
+        let isGameActive = false;
+        let planetSize = 150; // Starting planet size in pixels
+
+        // Game elements
+        const screens = {
+            title: document.getElementById('title-screen'),
+            game: document.getElementById('game-screen'),
+            victory: document.getElementById('victory-screen'),
+            defeat: document.getElementById('defeat-screen')
+        };
+
+        const elements = {
+            scoreCounter: document.getElementById('score-counter'),
+            livesHearts: document.getElementById('lives-hearts'),
+            missionProgress: document.getElementById('mission-progress'),
+            finalScoreVictory: document.getElementById('final-score-victory'),
+            finalScoreDefeat: document.getElementById('final-score-defeat')
+        };
+
+        // Initialize game
+        function initializeGame() {
+            console.log('🎮 Cosmic Clicker Game Initialized');
+            console.log('Initial State - Score:', currentScore, 'Lives:', currentLives);
+            
+            createStarField();
+            attachEventListeners();
+            showScreen('title');
+        }
+
+        // Create animated star field
+        function createStarField() {
+            const starsContainer = document.getElementById('title-stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Attach event listeners
+        function attachEventListeners() {
+            // Title screen
+            document.getElementById('start-mission-btn').addEventListener('click', startNewGame);
+
+            // Game screen
+            document.getElementById('single-planet').addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent outer space click
+                handlePlanetClick();
+            });
+            document.getElementById('outer-space-area').addEventListener('click', handleOuterSpaceClick);
+            document.getElementById('return-to-base-btn').addEventListener('click', returnToTitle);
+
+            // Victory screen
+            document.getElementById('new-mission-btn').addEventListener('click', startNewGame);
+            document.getElementById('return-to-command-btn').addEventListener('click', returnToTitle);
+
+            // Defeat screen
+            document.getElementById('retry-mission-btn').addEventListener('click', startNewGame);
+            document.getElementById('abandon-mission-btn').addEventListener('click', returnToTitle);
+        }
+
+        // Show specific screen
+        function showScreen(screenName) {
+            console.log('🖥️ Switching to screen:', screenName);
+            
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+            
+            if (screenName === 'victory') {
+                createFloatingParticles('victory-particles', '🏆');
+            } else if (screenName === 'defeat') {
+                createFloatingParticles('defeat-particles', '💀');
+            }
+        }
+
+        // Create floating particles for result screens
+        function createFloatingParticles(containerId, icon) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'floating-icon';
+                particle.textContent = icon;
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Move planet to random position within container
+        function movePlanetToRandomPosition() {
+            const planet = document.getElementById('single-planet');
+            const container = document.querySelector('.single-planet-container');
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calculate random position within container bounds, accounting for current planet size
+            const maxX = Math.max(0, containerRect.width - planetSize);
+            const maxY = Math.max(0, containerRect.height - 100 - planetSize); // 100px buffer for title
+            
+            const randomX = Math.random() * maxX;
+            const randomY = 100 + Math.random() * Math.max(0, maxY - 100); // Start below title
+            
+            planet.style.left = randomX + 'px';
+            planet.style.top = randomY + 'px';
+            
+            console.log('Planet repositioned to:', { x: randomX, y: randomY, size: planetSize });
+        }
+
+        // Shrink planet by random percentage between 20-50%
+        function shrinkPlanet() {
+            const shrinkPercentage = Math.random() * 30 + 20; // 20-50%
+            planetSize = Math.max(30, planetSize * (1 - shrinkPercentage / 100)); // Minimum size of 30px
+            
+            const planet = document.getElementById('single-planet');
+            planet.style.width = planetSize + 'px';
+            planet.style.height = planetSize + 'px';
+            
+            console.log('Planet shrunk by', shrinkPercentage.toFixed(1) + '%', 'New size:', planetSize.toFixed(1) + 'px');
+            
+            // If planet becomes too small, make it very hard to see but still clickable
+            if (planetSize < 50) {
+                planet.style.opacity = Math.max(0.3, planetSize / 50);
+                console.log('Planet opacity reduced to:', planet.style.opacity);
+            }
+        }
+
+        // Initialize planet position and size
+        function initializePlanet() {
+            planetSize = 150; // Reset to starting size
+            const planet = document.getElementById('single-planet');
+            planet.style.width = planetSize + 'px';
+            planet.style.height = planetSize + 'px';
+            planet.style.opacity = '1';
+            planet.style.position = 'absolute';
+            movePlanetToRandomPosition();
+            console.log('Planet initialized with size:', planetSize + 'px');
+        }
+
+        // Start new game
+        function startNewGame() {
+            console.log('🚀 Starting new mission');
+            currentScore = 0;
+            currentLives = 3;
+            isGameActive = true;
+            
+            updateGameDisplay();
+            showScreen('game');
+            
+            // Initialize planet
+            setTimeout(() => {
+                initializePlanet();
+            }, 100);
+            
+            console.log('Game reset - Score:', currentScore, 'Lives:', currentLives);
+        }
+
+        // Handle planet click (positive action)
+        function handlePlanetClick() {
+            if (!isGameActive) return;
+            
+            console.log('🪐 Planet discovered! Previous score:', currentScore);
+            currentScore++;
+            console.log('✅ Score increased to:', currentScore);
+            
+            // Shrink the planet
+            shrinkPlanet();
+            
+            // Move planet to new random position
+            movePlanetToRandomPosition();
+            
+            updateGameDisplay();
+            
+            if (currentScore >= 5) {
+                console.log('🎉 VICTORY! Mission completed with 5 discoveries');
+                isGameActive = false;
+                elements.finalScoreVictory.textContent = currentScore;
+                showScreen('victory');
+            }
+        }
+
+        // Handle outer space click (negative action)
+        function handleOuterSpaceClick(event) {
+            if (!isGameActive) return;
+            
+            // Check if the click was on the planet (event should have been stopped)
+            if (event.target.closest('#single-planet')) return;
+            
+            console.log('🌌 Missed the planet! Clicked outer space');
+            console.log('Previous state - Score:', currentScore, 'Lives:', currentLives);
+            
+            currentScore = 0; // Reset score when missing
+            currentLives--;
+            
+            console.log('💥 Score reset to 0, Lives decreased to:', currentLives);
+            
+            updateGameDisplay();
+            
+            if (currentLives <= 0) {
+                console.log('💀 GAME OVER! All lives lost');
+                isGameActive = false;
+                elements.finalScoreDefeat.textContent = currentScore;
+                showScreen('defeat');
+            } else {
+                // Reset planet size and move to new position when life is lost
+                initializePlanet();
+                console.log('Planet reset due to life loss');
+            }
+        }
+
+        // Update game display
+        function updateGameDisplay() {
+            elements.scoreCounter.textContent = currentScore;
+            elements.missionProgress.textContent = currentScore;
+            
+            // Update planet size display
+            const sizeDisplay = document.getElementById('planet-size');
+            if (sizeDisplay) {
+                sizeDisplay.textContent = Math.round(planetSize);
+            }
+            
+            // Update lives display
+            const hearts = elements.livesHearts.children;
+            for (let i = 0; i < hearts.length; i++) {
+                if (i < currentLives) {
+                    hearts[i].classList.remove('lost');
+                } else {
+                    hearts[i].classList.add('lost');
+                }
+            }
+            
+            console.log('📊 Display updated - Score:', currentScore, 'Lives:', currentLives);
+        }
+
+        // Return to title screen
+        function returnToTitle() {
+            console.log('🏠 Returning to title screen');
+            isGameActive = false;
+            showScreen('title');
+        }
+
+        // Start the game when page loads
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html>
