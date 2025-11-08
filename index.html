@@ -41,7 +41,6 @@
             font-size: 4rem;
             font-weight: bold;
             background: linear-gradient(45deg, #00ffff, #ff00ff);
-            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
@@ -386,3 +385,160 @@
             <p style="font-size: 1.2rem;">Amazing space exploration skills!</p>
             
             <div style="margin-top: 30px;">
+                <button id="play-again-btn" class="btn btn-primary">🚀 New Mission</button>
+                <button id="menu-btn" class="btn btn-secondary">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defeat Screen -->
+    <div id="defeat-screen" class="screen defeat-screen">
+        <div class="result-content">
+            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop&crop=center" 
+                 alt="mission failure" class="result-image defeat-image">
+            
+            <h1 class="result-title" style="color: #ff4040;">💥 MISSION FAILED 💥</h1>
+            <p style="font-size: 1.5rem; margin: 20px 0;">You missed too many times!</p>
+            <p>Final discoveries: <span id="final-score-lose">0</span></p>
+            <p style="color: #aaa;">Better luck next time, space explorer...</p>
+            
+            <div style="margin-top: 30px;">
+                <button id="retry-btn" class="btn btn-primary">🔄 Retry Mission</button>
+                <button id="menu2-btn" class="btn btn-secondary">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let lives = 3;
+        let planetSize = 150;
+        let gameActive = false;
+
+        // Get elements
+        const screens = {
+            title: document.getElementById('title-screen'),
+            game: document.getElementById('game-screen'),
+            victory: document.getElementById('victory-screen'),
+            defeat: document.getElementById('defeat-screen')
+        };
+
+        const elements = {
+            score: document.getElementById('score'),
+            progress: document.getElementById('progress'),
+            size: document.getElementById('size'),
+            livesContainer: document.getElementById('lives-container'),
+            planet: document.getElementById('planet'),
+            gameArea: document.getElementById('game-area'),
+            finalScoreWin: document.getElementById('final-score-win'),
+            finalScoreLose: document.getElementById('final-score-lose')
+        };
+
+        // Show screen function
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        // Update display
+        function updateDisplay() {
+            elements.score.textContent = score;
+            elements.progress.textContent = score;
+            elements.size.textContent = Math.round(planetSize);
+            
+            // Update lives
+            elements.livesContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('div');
+                heart.className = i < lives ? 'life-heart' : 'life-heart lost';
+                elements.livesContainer.appendChild(heart);
+            }
+        }
+
+        // Position planet randomly
+        function positionPlanet() {
+            const container = document.getElementById('planet-container');
+            const containerRect = container.getBoundingClientRect();
+            const maxX = containerRect.width - planetSize;
+            const maxY = containerRect.height - planetSize;
+            
+            const x = Math.random() * Math.max(0, maxX);
+            const y = Math.random() * Math.max(0, maxY);
+            
+            elements.planet.style.left = x + 'px';
+            elements.planet.style.top = y + 'px';
+            elements.planet.style.width = planetSize + 'px';
+            elements.planet.style.height = planetSize + 'px';
+        }
+
+        // Planet click handler
+        function handlePlanetClick(e) {
+            e.stopPropagation();
+            if (!gameActive) return;
+            
+            score++;
+            
+            // Shrink planet
+            const shrink = Math.random() * 30 + 20; // 20-50%
+            planetSize = Math.max(30, planetSize * (1 - shrink / 100));
+            
+            // Reposition planet
+            positionPlanet();
+            updateDisplay();
+            
+            // Check win condition
+            if (score >= 5) {
+                gameActive = false;
+                elements.finalScoreWin.textContent = score;
+                showScreen('victory');
+            }
+        }
+
+        // Space click handler
+        function handleSpaceClick() {
+            if (!gameActive) return;
+            
+            score = 0;
+            lives--;
+            
+            if (lives <= 0) {
+                gameActive = false;
+                elements.finalScoreLose.textContent = score;
+                showScreen('defeat');
+            } else {
+                // Reset planet
+                planetSize = 150;
+                positionPlanet();
+                updateDisplay();
+            }
+        }
+
+        // Start game
+        function startGame() {
+            score = 0;
+            lives = 3;
+            planetSize = 150;
+            gameActive = true;
+            
+            positionPlanet();
+            updateDisplay();
+            showScreen('game');
+        }
+
+        // Event listeners
+        document.getElementById('start-btn').onclick = startGame;
+        document.getElementById('quit-btn').onclick = () => showScreen('title');
+        document.getElementById('play-again-btn').onclick = startGame;
+        document.getElementById('retry-btn').onclick = startGame;
+        document.getElementById('menu-btn').onclick = () => showScreen('title');
+        document.getElementById('menu2-btn').onclick = () => showScreen('title');
+
+        elements.planet.onclick = handlePlanetClick;
+        elements.gameArea.onclick = handleSpaceClick;
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
